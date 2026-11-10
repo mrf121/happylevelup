@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sebuah Pesan Untukmu</title>
+    <!-- Google Fonts untuk gaya tulisan tangan & font modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #faf9f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Poppins', sans-serif;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* --- STYLES AMPLOP --- */
+        .envelope-container {
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            animation: fadeIn 1s ease;
+        }
+
+        .envelope-container:hover {
+            transform: scale(1.05);
+        }
+
+        .envelope {
+            position: relative;
+            width: 280px;
+            height: 180px;
+            background-color: #f0d5b7;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 140px solid transparent;
+            border-right: 140px solid transparent;
+            border-top: 100px solid #e0c2a2;
+            transform-origin: top;
+            transition: transform 0.6s ease;
+            z-index: 3;
+        }
+
+        .envelope-pocket {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 140px solid #e8ccac;
+            border-right: 140px solid #e8ccac;
+            border-bottom: 100px solid #dfc2a0;
+            border-radius: 0 0 10px 10px;
+            z-index: 2;
+        }
+
+        .envelope-text {
+            margin-top: 25px;
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .open-flap {
+            transform: rotateX(180deg);
+            z-index: 0;
+        }
+
+        .hide-envelope {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease;
+        }
+
+        /* --- STYLES STICKY NOTE --- */
+        .main-content {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+            width: 100%;
+        }
+
+        .show-content {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h1 {
+            color: #4a4a4a;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .sticky-note {
+            background-color: #fffae6;
+            width: 100%;
+            max-width: 480px; /* Lebar ditambah sedikit agar teks lebih leluasa */
+            min-height: 340px; /* Tinggi minimum ditambah agar muat banyak teks */
+            padding: 35px 30px 30px 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08), 
+                        0 1px 3px rgba(0, 0, 0, 0.05);
+            position: relative;
+            transform: rotate(-1deg);
+            border-radius: 2px;
+        }
+
+        .tape {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 24px;
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1px dashed rgba(0, 0, 0, 0.1);
+        }
+
+        .handwriting-text {
+            font-family: 'Caveat', cursive;
+            font-size: 1.85rem; /* Ukuran font disesuaikan agar pas dan muat di kotak */
+            color: #333333;
+            line-height: 1.35; /* Spasi antar baris dibuat sedikit lebih rapat */
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 22px;
+            background-color: #555;
+            margin-left: 2px;
+            animation: blink 0.7s infinite;
+            vertical-align: middle;
+        }
+
+        /* Tombol & Modal */
+        .btn-container {
+            margin-top: 25px;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 5s; /* Disesuaikan sedikit waktunya agar muncul setelah teks selesai diketik */
+            text-align: center;
+        }
+
+        .btn-gift {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 0.95rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn-gift:hover {
+            background-color: #fa5252;
+            transform: translateY(-2px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .modal-content h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+        }
+
+        .modal-content p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background-color: #f1f3f5;
+            color: #495057;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Animasi Pendukung */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TAMPILAN AWAL: AMPLOP -->
+    <div class="envelope-container" id="envelopeContainer" onclick="openEnvelope()">
+        <div class="envelope">
+            <div class="envelope-flap" id="envelopeFlap"></div>
+            <div class="envelope-pocket"></div>
+        </div>
+        <p class="envelope-text">💌 Klik untuk membuka surat</p>
+    </div>
+
+    <!-- TAMPILAN UTAMA: STICKY NOTE (Muncul Setelah Amplop Dibuka) -->
+    <div class="main-content" id="mainContent">
+        <h1>Catatan Kecil Untukmu✨</h1>
+
+        <div class="sticky-note">
+            <div class="tape"></div>
+            <div class="handwriting-text" id="text-target"></div><span class="cursor" id="cursor"></span>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn-gift" onclick="openModal()">💌 Baca Pesan Lainnya</button>
+        </div>
+    </div>
+
+    <!-- Modal Pop-up -->
+    <div class="modal" id="surpriseModal">
+        <div class="modal-content">
+            <h3>Catatan Tambahan</h3>
+            <p>Semoga hari-harimu selalu diisi dengan hal-hal baik, senyuman, dan kebahagiaan yang sederhana namun berarti. Semoga suka kado nya yaa ✨</p>
+<p>-mrf</p>
+            <button class="close-btn" onclick="closeModal()">Tutup</button>
+        </div>
+    </div>
+
+    <script>
+        // Teks ucapan
+        const messages = [
+            "Hai neng arin :)\n",
+            "Maaf banget ya telat ngasih kadonya. Sengaja telat, sih, biar perayaan ulang tahunnya kerasa lebih lama alias extend gitu. Hehe. ",
+            "Tapi doa terbaiknya tetap tulus kok. happy belated birthday! 🥳🎂🎁"
+        ];
+
+        let messageIndex = 0;
+        let charIndex = 0;
+        const target = document.getElementById("text-target");
+        const cursor = document.getElementById("cursor");
+
+        function typeWriter() {
+            if (messageIndex < messages.length) {
+                if (charIndex < messages[messageIndex].length) {
+                    target.innerHTML += messages[messageIndex].charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeWriter, 65); // Kecepatan mengetik sedikit disesuaikan
+                } else {
+                    messageIndex++;
+                    charIndex = 0;
+                    setTimeout(typeWriter, 250); 
+                }
+            } else {
+                cursor.style.display = 'none';
+            }
+        }
+
+        // Fungsi saat amplop diklik
+        function openEnvelope() {
+            const flap = document.getElementById("envelopeFlap");
+            const container = document.getElementById("envelopeContainer");
+            const mainContent = document.getElementById("mainContent");
+
+            // Buka penutup amplop
+            flap.classList.add("open-flap");
+
+            // Setelah animasi amplop terbuka, sembunyikan amplop dan munculkan sticky note
+            setTimeout(() => {
+                container.classList.add("hide-envelope");
+                mainContent.classList.add("show-content");
+
+                // Mulai animasi ketik teks setelah note muncul
+                setTimeout(typeWriter, 600);
+            }, 500);
+        }
+
+        function openModal() {
+            document.getElementById("surpriseModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("surpriseModal").style.display = "none";
+        }
+    </script>
+</body>
+</html>
